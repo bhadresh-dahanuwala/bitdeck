@@ -22,3 +22,34 @@ export {
   type CardMask,
 } from "./bits";
 export { mulberry32, type Rng } from "./random";
+export {
+  ALL_RANKS,
+  NUM_RANKS,
+  R2,
+  R3,
+  R4,
+  R5,
+  R6,
+  R7,
+  R8,
+  R9,
+  RA,
+  RANKS_DESC,
+  RANK_CODES,
+  RJ,
+  RK,
+  RQ,
+  RT,
+  Rank,
+} from "./rank";
+export {
+  ALL_SUITS,
+  CLUB,
+  DIAMOND,
+  HEART,
+  NUM_SUITS,
+  SPADE,
+  SUIT_CODES,
+  SUIT_SYMBOLS,
+  Suit,
+} from "./suit";
