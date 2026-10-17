@@ -244,7 +244,7 @@ Branch `task/09-docs`.
 
 ---
 
-### - [ ] 10 — Release workflow
+### - [x] 10 — Release workflow
 
 Branch `task/10-release`. Write the workflow; **do not run it, tag, or publish.**
 - `.github/workflows/release.yml`, triggered by `push` of tags `v*`:
