@@ -28,6 +28,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
+      - name: Smoke test CJS and ESM builds
+        run: |
+          node -e "const { Deck, popcount } = require('./dist/index.cjs'); const d = new Deck(); const h = d.dealCards(5); if (popcount(h) !== 5 || d.count() !== 47) throw new Error('CJS smoke test failed');"
+          node --input-type=module -e "import { Deck, popcount } from './dist/index.js'; const d = new Deck(); const h = d.dealCards(5); if (popcount(h) !== 5 || d.count() !== 47) throw new Error('ESM smoke test failed');"
 
   test:
     runs-on: ubuntu-latest

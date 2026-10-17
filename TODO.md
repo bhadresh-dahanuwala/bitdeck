@@ -207,7 +207,7 @@ Implementation requirements:
 
 ---
 
-### - [ ] 07 — Public API and package checks
+### - [x] 07 — Public API and package checks
 
 Branch `task/07-api`.
 - `src/index.ts` re-exports the full public API (values and types) from tasks 03–06, nothing internal.
