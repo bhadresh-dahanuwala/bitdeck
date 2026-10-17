@@ -51,7 +51,12 @@ wherever the two differ: the differences are deliberate.
 ## Code standards
 
 - TypeScript `strict`, plus `noUncheckedIndexedAccess` and `exactOptionalPropertyTypes`.
-  No `any`. Avoid the non-null assertion `!` unless an index is provably in range; if you use it, add a comment saying why.
+  No `any`. The lint config forbids both `arr[i]!` and `arr[i] as T`. When an index is provably
+  in range, read it through one private helper per array that uses a tuple cast, with a JSDoc
+  saying why it is safe (see `cardAt` in `src/card.ts`). Don't repeat the cast inline.
+- Loops over a mask must end on **any** input (`NaN`, fractions, negatives, bits above 51):
+  clear the extra bits with `maskAnd(mask, FULL_DECK_MASK)` first and loop while the current key is
+  non-zero. Never write `while (m !== 0)` over a mask a caller gave you.
 - **Performance matters** (poker evaluators call this in hot loops). On hot paths
   (`src/bits.ts`, mask utilities, `Deck.dealCards`): no allocations per call,
   no `bigint`, no closures created per call, no `Array.prototype` chains
