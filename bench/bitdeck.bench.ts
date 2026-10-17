@@ -1,32 +1,40 @@
 import { describe, expect, test } from "vitest";
-import * as bitdeck from "../src/index";
-import type { Card, CardMask } from "../src/index";
+import * as bitdeck from "../dist/index.js";
+import type { Card, CardMask } from "../dist/index.js";
 import * as bigintRef from "./bigint-reference";
 
-const {
-  C2C,
-  C7D,
-  C9S,
-  CAH,
-  CAS,
-  CJH,
-  CKC,
-  Deck,
-  cardsMask,
-  extractCards,
-  getCard,
-  maskOr,
-  mulberry32,
-  popcount,
-  rankMask,
-} = bitdeck;
+const { Deck, cardsMask, extractCards, getCard, maskOr, mulberry32, popcount, rankMask } = bitdeck;
 const { BigIntDeck, popcountBigInt, rankMaskBigInt } = bigintRef;
 
-const SEVEN_CARDS: readonly Card[] = [C2C, C7D, C9S, CJH, CKC, CAH, CAS];
-const SEVEN_CARD_MASK: CardMask = cardsMask(SEVEN_CARDS);
-const SEVEN_CARD_MASK_BIGINT = BigInt(SEVEN_CARD_MASK);
-const MASK_A: CardMask = cardsMask([C2C, C7D, CJH, CAH]);
-const MASK_B: CardMask = cardsMask([C9S, CKC, CAS]);
+const HAND_COUNT = 1024;
+const HAND_MASK = HAND_COUNT - 1;
+
+const handGenDeck = new Deck({ rng: mulberry32(42) });
+const HANDS: readonly CardMask[] = Object.freeze(
+  Array.from({ length: HAND_COUNT }, () => {
+    handGenDeck.reset();
+    return handGenDeck.dealCards(7);
+  }),
+);
+const HANDS_BIGINT: readonly bigint[] = Object.freeze(HANDS.map((m) => BigInt(m)));
+const HAND_CARDS: readonly (readonly Card[])[] = Object.freeze(
+  HANDS.map((m) => Object.freeze(extractCards(m))),
+);
+
+/** `HANDS[index]` for `0 <= index < 1024` (masked with `& 1023` at call sites). */
+function handAt(index: number): CardMask {
+  return (HANDS as readonly [CardMask, ...CardMask[]])[index as 0];
+}
+
+/** `HANDS_BIGINT[index]` for `0 <= index < 1024` (masked with `& 1023` at call sites). */
+function handBigIntAt(index: number): bigint {
+  return (HANDS_BIGINT as readonly [bigint, ...bigint[]])[index as 0];
+}
+
+/** `HAND_CARDS[index]` for `0 <= index < 1024` (masked with `& 1023` at call sites). */
+function handCardsAt(index: number): readonly Card[] {
+  return (HAND_CARDS as readonly [readonly Card[], ...(readonly Card[])[]])[index as 0];
+}
 
 const deck2 = new Deck({ rng: mulberry32(101) });
 const deck7 = new Deck({ rng: mulberry32(202) });
@@ -35,18 +43,26 @@ const templateDeck = new Deck({ rng: mulberry32(303) });
 
 describe("bitdeck benchmarks", () => {
   test("popcount: number vs bigint", async ({ bench }) => {
-    expect(popcount(SEVEN_CARD_MASK)).toBe(popcountBigInt(SEVEN_CARD_MASK_BIGINT));
+    for (let k = 0; k < HAND_COUNT; k++) {
+      expect(popcount(handAt(k))).toBe(popcountBigInt(handBigIntAt(k)));
+    }
+    let i = 0;
+    let j = 0;
     await bench.compare(
-      bench("popcount (number)", () => popcount(SEVEN_CARD_MASK)),
-      bench("popcount (bigint)", () => popcountBigInt(SEVEN_CARD_MASK_BIGINT)),
+      bench("popcount (number)", () => popcount(handAt(i++ & HAND_MASK))),
+      bench("popcount (bigint)", () => popcountBigInt(handBigIntAt(j++ & HAND_MASK))),
     );
   });
 
   test("rankMask: number vs bigint", async ({ bench }) => {
-    expect(rankMask(SEVEN_CARD_MASK)).toBe(rankMaskBigInt(SEVEN_CARD_MASK_BIGINT));
+    for (let k = 0; k < HAND_COUNT; k++) {
+      expect(rankMask(handAt(k))).toBe(rankMaskBigInt(handBigIntAt(k)));
+    }
+    let i = 0;
+    let j = 0;
     await bench.compare(
-      bench("rankMask (number)", () => rankMask(SEVEN_CARD_MASK)),
-      bench("rankMask (bigint)", () => rankMaskBigInt(SEVEN_CARD_MASK_BIGINT)),
+      bench("rankMask (number)", () => rankMask(handAt(i++ & HAND_MASK))),
+      bench("rankMask (bigint)", () => rankMaskBigInt(handBigIntAt(j++ & HAND_MASK))),
     );
   });
 
@@ -68,11 +84,19 @@ describe("bitdeck benchmarks", () => {
   });
 
   test("core bit, card, and deck operations", async ({ bench }) => {
-    await bench("maskOr", () => maskOr(MASK_A, MASK_B)).run();
+    let iMaskOr = 0;
+    await bench("maskOr", () => {
+      const idx = iMaskOr++ & HAND_MASK;
+      return maskOr(handAt(idx), handAt((idx + 1) & HAND_MASK));
+    }).run();
 
-    await bench("extractCards (7 cards)", () => extractCards(SEVEN_CARD_MASK)).run();
+    let iExtract = 0;
+    await bench("extractCards (7 cards)", () => extractCards(handAt(iExtract++ & HAND_MASK))).run();
 
-    await bench("cardsMask (7 cards)", () => cardsMask(SEVEN_CARDS)).run();
+    let iCardsMask = 0;
+    await bench("cardsMask (7 cards)", () =>
+      cardsMask(handCardsAt(iCardsMask++ & HAND_MASK)),
+    ).run();
 
     await bench("getCard", () => getCard("AS")).run();
 

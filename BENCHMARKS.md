@@ -1,35 +1,36 @@
 # Benchmarks
 
-Measured with `npm run bench` (`vitest bench --run`, Vitest v5.0.5 / Tinybench):
-
 - **Machine:** Apple M5 Pro (`arm64`, 48 GB RAM)
 - **OS:** macOS 26.7.1 (Build 25G241)
 - **Node.js:** v24.14.0
+- **Methodology:** Measured on the built `dist/` package with `npm run bench` (`vitest bench --run --reporter=verbose`, Vitest v5.0.5 / Tinybench) cycling over 1,024 seeded random 7-card hands; Tinybench's per-call harness overhead caps tiny operations at roughly 40–50M ops/sec, so for `popcount` and `rankMask` the `number`-vs-`bigint` ratio matters more than the absolute ops/sec.
 
 ## Results
 
 ### `number` (`CardMask`) vs `bigint` Reference (`bench/bigint-reference.ts`)
 
-| Benchmark                                  | `hz` (ops/sec) | `mean` (ms) | `p75` (ms) | `p99` (ms) |  `rme` |    Samples | Relative               |
-| ------------------------------------------ | -------------: | ----------: | ---------: | ---------: | -----: | ---------: | ---------------------- |
-| `popcount (number)`                        |     54,311,241 |      0.0000 |     0.0000 |     0.0000 | ±0.06% | 70,013,365 | **2.54x faster**       |
-| `popcount (bigint)`                        |     21,361,323 |      0.0001 |     0.0000 |     0.0001 | ±0.06% | 19,492,409 | baseline               |
-| `rankMask (number)`                        |     51,704,960 |      0.0000 |     0.0000 |     0.0000 | ±0.05% | 67,052,816 | **2.97x faster**       |
-| `rankMask (bigint)`                        |     17,382,393 |      0.0001 |     0.0001 |     0.0001 | ±9.79% | 13,986,001 | baseline               |
-| `deck.reset(); deck.dealCards(7) (number)` |      2,856,260 |      0.0004 |     0.0004 |     0.0005 | ±0.05% |  2,803,444 | 0.21x (see note below) |
-| `deck.reset(); deck.dealCards(7) (bigint)` |     13,292,144 |      0.0001 |     0.0001 |     0.0001 | ±0.05% | 12,453,038 | **4.65x faster**       |
+| Benchmark                                          | `hz` (ops/sec) | `mean` (ms) | `p75` (ms) | `p99` (ms) |  `rme` |    Samples | Relative                           |
+| -------------------------------------------------- | -------------: | ----------: | ---------: | ---------: | -----: | ---------: | ---------------------------------- |
+| `popcount (number)`                                |     41,051,071 |      0.0000 |     0.0000 |     0.0000 | ±0.05% | 54,401,700 | **2.00x faster**                   |
+| `popcount (bigint)`                                |     20,538,608 |      0.0001 |     0.0001 |     0.0001 | ±0.05% | 18,466,862 | baseline                           |
+| `rankMask (number)`                                |     38,142,640 |      0.0000 |     0.0000 |     0.0000 | ±0.06% | 50,688,124 | **2.33x faster**                   |
+| `rankMask (bigint)`                                |     16,397,165 |      0.0001 |     0.0001 |     0.0001 | ±0.34% | 14,247,826 | baseline                           |
+| `deck.reset(); deck.dealCards(7) (number, before)` |      9,000,062 |      0.0001 |     0.0001 |     0.0002 | ±0.06% |  8,525,194 | 0.71x vs `bigint`                  |
+| `deck.reset(); deck.dealCards(7) (number, after)`  |     17,562,576 |      0.0001 |     0.0001 |     0.0001 | ±0.04% | 15,530,552 | **1.39x faster** (1.95x vs before) |
+| `deck.reset(); deck.dealCards(7) (bigint)`         |     12,668,760 |      0.0001 |     0.0001 |     0.0001 | ±0.04% | 12,036,281 | baseline                           |
 
 ### Core Bit, Card, and Deck Operations
 
-| Benchmark                         | `hz` (ops/sec) | `mean` (ms) | `p75` (ms) | `p99` (ms) |  `rme` |    Samples |
-| --------------------------------- | -------------: | ----------: | ---------: | ---------: | -----: | ---------: |
-| `maskOr`                          |     53,099,493 |      0.0000 |     0.0000 |     0.0000 | ±0.06% | 68,630,453 |
-| `extractCards (7 cards)`          |      3,173,516 |      0.0003 |     0.0003 |     0.0004 | ±0.04% |  3,124,965 |
-| `cardsMask (7 cards)`             |      7,822,993 |      0.0001 |     0.0002 |     0.0002 | ±0.05% |  7,443,121 |
-| `getCard`                         |     43,298,088 |      0.0000 |     0.0000 |     0.0000 | ±0.05% | 57,179,435 |
-| `deck.reset(); deck.dealCards(2)` |      6,822,109 |      0.0002 |     0.0002 |     0.0002 | ±0.05% |  6,616,929 |
-| `deck.clone()`                    |     11,376,781 |      0.0001 |     0.0001 |     0.0001 | ±1.21% | 10,558,309 |
+| Benchmark                                  | `hz` (ops/sec) | `mean` (ms) | `p75` (ms) | `p99` (ms) |  `rme` |    Samples |
+| ------------------------------------------ | -------------: | ----------: | ---------: | ---------: | -----: | ---------: |
+| `maskOr`                                   |     36,067,906 |      0.0000 |     0.0000 |     0.0000 | ±0.06% | 48,009,065 |
+| `extractCards (7 cards)`                   |     18,476,532 |      0.0001 |     0.0001 |     0.0001 | ±0.04% | 16,331,900 |
+| `cardsMask (7 cards)`                      |     17,300,026 |      0.0001 |     0.0001 |     0.0001 | ±0.13% | 15,198,117 |
+| `getCard`                                  |     38,516,177 |      0.0000 |     0.0000 |     0.0000 | ±0.08% | 51,220,275 |
+| `deck.reset(); deck.dealCards(2) (before)` |     20,229,594 |      0.0001 |     0.0001 |     0.0001 | ±0.05% | 18,175,578 |
+| `deck.reset(); deck.dealCards(2) (after)`  |     22,929,317 |      0.0000 |     0.0000 |     0.0001 | ±0.18% | 22,714,026 |
+| `deck.clone()`                             |     24,047,039 |      0.0000 |     0.0000 |     0.0000 | ±0.85% | 25,704,856 |
 
 ## Summary
 
-Pure bit-level hot-path primitives operating on 52-bit `number` masks (`popcount`, `rankMask`, and `maskOr`) sustain 51–54 million operations per second, outperforming their 64-bit SWAR `bigint` equivalents by **2.54x** (`popcount`) and **2.97x** (`rankMask`), while `O(1)` map-backed `getCard` lookups reach 43.3 million ops/sec and `deck.clone()` reaches 11.4 million ops/sec. In contrast, `deck.reset(); deck.dealCards(7)` is slower for `number` (`2.86M` ops/sec) than for the single-file `bigint` reference (`13.29M` ops/sec) under `vitest bench` for two reasons: first, Vitest's SSR module runner wraps cross-module imports (`src/deck.ts` importing `cardKey`, `maskOr`, `maskAndNot`, and `FULL_DECK_MASK` from `src/bits.ts`) in tracked export getters (`GetterTracker`), whereas running the bundled `dist/index.js` directly in Node.js raises `number` `deck.reset(); deck.dealCards(7)` to **~10.3M ops/sec**; second, each card dealt calls `maskOr` (splitting and recombining `lo`/`hi` 32-bit halves) and indexes a frozen JS array of boxed `HeapNumber`s (`CARD_KEYS`), whereas storing `CARD_KEYS` in a `Float64Array(52)` and summing disjoint card keys (`dealt += cardKey(chosen)`) reaches **~28.5M ops/sec** in Node.js.
+Across 1,024 varied 7-card hands on the built `dist/` bundle, 52-bit `number` masks (`CardMask`) outperform their 64-bit SWAR `bigint` counterparts across every benchmark: `popcount` is **2.00x faster** (`41.05M` vs `20.54M` ops/sec), `rankMask` is **2.33x faster** (`38.14M` vs `16.40M` ops/sec), and `deck.reset(); deck.dealCards(7)` is **1.39x faster** (`17.56M` vs `12.67M` ops/sec). Storing `CARD_KEYS` in an unboxed `Float64Array(52)` (instead of a frozen boxed JS array) and using exact disjoint arithmetic (`dealt += cardKey(chosen)` and `this.#key -= dealt`) in `Deck.dealCards` nearly doubled 7-card deal throughput from `9.00M` to `17.56M` ops/sec (**1.95x**) and raised 2-card deal throughput from `20.23M` to `22.93M` ops/sec, while `getCard` (`38.52M` ops/sec), `maskOr` (`36.07M` ops/sec), `deck.clone()` (`24.05M` ops/sec), `extractCards` (`18.48M` ops/sec), and `cardsMask` (`17.30M` ops/sec) all operate without per-call heap allocations on hot paths.
