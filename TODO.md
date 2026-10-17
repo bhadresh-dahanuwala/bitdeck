@@ -63,7 +63,7 @@ If `tsdown` can't get `attw` fully green, switch to `tsup` and explain why in th
 
 ---
 
-### - [ ] 02 — CI and Dependabot
+### - [x] 02 — CI and Dependabot
 
 Branch `task/02-ci`.
 
