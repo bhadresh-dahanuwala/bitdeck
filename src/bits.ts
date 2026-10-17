@@ -80,7 +80,10 @@ export const SAME_RANKS: readonly CardMask[] = Object.freeze([
   0xf0000000000, 0xf00000000000, 0xf000000000000,
 ]);
 
-const CARD_KEYS: readonly CardMask[] = Object.freeze(Array.from({ length: 52 }, (_, i) => 2 ** i));
+const CARD_KEYS = new Float64Array(52);
+for (let i = 0; i < 52; i++) {
+  CARD_KEYS[i] = 2 ** i;
+}
 
 /**
  * Checks whether a value is a valid 52-bit `CardMask` (an integer `m` with `0 <= m <= FULL_DECK_MASK`).
