@@ -219,7 +219,7 @@ Branch `task/07-api`.
 
 ---
 
-### - [ ] 08 — Benchmarks
+### - [x] 08 — Benchmarks
 
 Branch `task/08-bench`. Vitest bench files in `bench/` (excluded from coverage and from the npm package).
 - Benchmarks: `popcount`, `rankMask`, `maskOr`, `extractCards` (7 cards), `cardsMask` (7 cards), `getCard`,
