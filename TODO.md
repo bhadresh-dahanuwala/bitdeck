@@ -133,7 +133,7 @@ Branch `task/04-rank-suit`. Port `rank.py` and `suit.py`.
 
 ---
 
-### - [ ] 05 — `Card` and card utilities (`src/card.ts`)
+### - [x] 05 — `Card` and card utilities (`src/card.ts`)
 
 Branch `task/05-card`. Port `card.py`.
 
