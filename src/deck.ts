@@ -338,16 +338,19 @@ export class Deck {
         const j = cur + Math.floor(this.#rng() * (this.#end - cur));
         const chosen = orderAt(this.#order, j);
         this.#order[j] = orderAt(this.#order, cur);
-        dealt = maskOr(dealt, cardKey(chosen));
+        // Each dealt card in #order[#start..#end] is distinct, so its bit is not yet set in dealt.
+        dealt += cardKey(chosen);
       }
     } else {
       for (let i = 0; i < count; i++) {
         const chosen = orderAt(this.#order, this.#start + i);
-        dealt = maskOr(dealt, cardKey(chosen));
+        // Each dealt card in #order[#start..#end] is distinct, so its bit is not yet set in dealt.
+        dealt += cardKey(chosen);
       }
     }
     this.#start += count;
-    this.#key = maskAndNot(this.#key, dealt);
+    // Every dealt card was present in #key, so subtraction clears exactly those bits.
+    this.#key -= dealt;
     return dealt;
   }
 
