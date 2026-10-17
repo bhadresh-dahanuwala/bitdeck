@@ -15,5 +15,6 @@
     "skipLibCheck": true,
     "allowJs": true
   },
-  "include": ["src", "test", "bench", "*.config.ts", "*.config.js"]
+  "include": ["src", "test", "bench", "*.config.ts", "*.config.js"],
+  "exclude": ["test/.readme-blocks"]
 }
