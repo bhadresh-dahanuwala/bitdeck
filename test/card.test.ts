@@ -80,6 +80,7 @@ import {
   getCardKeyFromCode,
   getCardKeysFromCodes,
   getCards,
+  isSingleCard,
   rankMaskFromCards,
   sortCards,
 } from "../src/index";
@@ -533,6 +534,32 @@ describe("sortCards, cardsMask, rankMaskFromCards, extractCards, extractCardsKey
       new RangeError(`Invalid card key: ${String(FULL_DECK_MASK)}`),
     );
     expect(() => getCardByKey(Number.NaN)).toThrow(new RangeError("Invalid card key: NaN"));
+  });
+
+  it("terminates and returns only valid cards/keys when extractCards/extractCardsKey receive non-standard masks", () => {
+    const inputs = [
+      Number.NaN,
+      1.5,
+      -1,
+      Number.POSITIVE_INFINITY,
+      2 ** 52,
+      2 ** 53,
+      FULL_DECK_MASK + 2 ** 52,
+    ];
+    for (const input of inputs) {
+      const cards = extractCards(input);
+      const keys = extractCardsKey(input);
+      expect(cards.length).toBeLessThanOrEqual(52);
+      expect(keys.length).toBe(cards.length);
+      for (const card of cards) {
+        expect(card).toBeInstanceOf(Card);
+      }
+      for (const key of keys) {
+        expect(isSingleCard(key)).toBe(true);
+      }
+    }
+    expect(extractCards(1.5)).toEqual([C2C]);
+    expect(extractCardsKey(1.5)).toEqual([C2C.key]);
   });
 });
 

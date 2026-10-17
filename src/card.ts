@@ -1,4 +1,13 @@
-import { cardIndex, isSingleCard, lowestCardKey, maskOr, rankMask, type CardMask } from "./bits";
+import {
+  FULL_DECK_MASK,
+  cardIndex,
+  isSingleCard,
+  lowestCardKey,
+  maskAnd,
+  maskOr,
+  rankMask,
+  type CardMask,
+} from "./bits";
 import { R2, R3, R4, R5, R6, R7, R8, R9, RA, RJ, RK, RQ, RT, type Rank } from "./rank";
 import { CLUB, DIAMOND, HEART, SPADE, type Suit } from "./suit";
 
@@ -767,6 +776,11 @@ export function rankMaskFromCards(mask: CardMask): number {
   return rankMask(mask);
 }
 
+/** `ALL_CARDS[index]` for an index the caller guarantees is 0–51 (see call sites). */
+function cardAt(index: number): Card {
+  return (ALL_CARDS as readonly [Card, ...Card[]])[index as 0];
+}
+
 /**
  * Looks up the `Card` object for a single-card bitmask `key`.
  * Throws `RangeError` if `key` is not a valid single-card bitmask.
@@ -781,11 +795,12 @@ export function getCardByKey(key: CardMask): Card {
   if (!isSingleCard(key)) {
     throw new RangeError(`Invalid card key: ${String(key)}`);
   }
-  return (ALL_CARDS as readonly [Card, ...Card[]])[cardIndex(key) as 0]; // cardIndex(key) is 0–51 when isSingleCard(key) is true
+  return cardAt(cardIndex(key));
 }
 
 /**
  * Extracts an array of `Card` objects from `mask` in ascending bit index order (`0`–`51`).
+ * Bits above 51 and fractional parts are ignored.
  *
  * @example
  * ```ts
@@ -794,16 +809,19 @@ export function getCardByKey(key: CardMask): Card {
  */
 export function extractCards(mask: CardMask): Card[] {
   const result: Card[] = [];
-  for (let m = mask; m !== 0;) {
-    const key = lowestCardKey(m);
-    result.push((ALL_CARDS as readonly [Card, ...Card[]])[cardIndex(key) as 0]); // cardIndex(key) is 0–51 for a valid mask
-    m -= key; // key is a set bit of m, so subtraction is exact
+  for (
+    let m = maskAnd(mask, FULL_DECK_MASK), key = lowestCardKey(m);
+    key !== 0;
+    m -= key, key = lowestCardKey(m)
+  ) {
+    result.push(cardAt(cardIndex(key)));
   }
   return result;
 }
 
 /**
  * Extracts an array of single-card bitmask keys from `mask` in ascending bit index order (`0`–`51`).
+ * Bits above 51 and fractional parts are ignored.
  *
  * @example
  * ```ts
@@ -812,10 +830,12 @@ export function extractCards(mask: CardMask): Card[] {
  */
 export function extractCardsKey(mask: CardMask): CardMask[] {
   const result: CardMask[] = [];
-  for (let m = mask; m !== 0;) {
-    const key = lowestCardKey(m);
+  for (
+    let m = maskAnd(mask, FULL_DECK_MASK), key = lowestCardKey(m);
+    key !== 0;
+    m -= key, key = lowestCardKey(m)
+  ) {
     result.push(key);
-    m -= key; // key is a set bit of m, so subtraction is exact
   }
   return result;
 }
