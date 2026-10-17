@@ -1,4 +1,4 @@
-import { cardIndex, cardKey, forEachCardIndex, maskOr, rankMask, type CardMask } from "./bits";
+import { cardIndex, isSingleCard, lowestCardKey, maskOr, rankMask, type CardMask } from "./bits";
 import { R2, R3, R4, R5, R6, R7, R8, R9, RA, RJ, RK, RQ, RT, type Rank } from "./rank";
 import { CLUB, DIAMOND, HEART, SPADE, type Suit } from "./suit";
 
@@ -708,13 +708,10 @@ export const ALL_CARDS: readonly Card[] = Object.freeze([
   CAS,
 ]);
 
-const CARD_BY_KEY = new Map<CardMask, Card>();
 const CARD_BY_CODE = new Map<string, Card>();
 const VALID_SINGLE_RANKS = new Set<string>();
 
 for (const card of ALL_CARDS) {
-  CARD_BY_KEY.set(card.key, card);
-
   const rUpper = card.rank.code;
   const rLower = rUpper.toLowerCase();
   VALID_SINGLE_RANKS.add(rUpper);
@@ -781,11 +778,10 @@ export function rankMaskFromCards(mask: CardMask): number {
  * ```
  */
 export function getCardByKey(key: CardMask): Card {
-  const card = CARD_BY_KEY.get(key);
-  if (card === undefined) {
+  if (!isSingleCard(key)) {
     throw new RangeError(`Invalid card key: ${String(key)}`);
   }
-  return card;
+  return (ALL_CARDS as readonly [Card, ...Card[]])[cardIndex(key) as 0]; // cardIndex(key) is 0–51 when isSingleCard(key) is true
 }
 
 /**
@@ -798,9 +794,11 @@ export function getCardByKey(key: CardMask): Card {
  */
 export function extractCards(mask: CardMask): Card[] {
   const result: Card[] = [];
-  forEachCardIndex(mask, (idx) => {
-    result.push(getCardByKey(cardKey(idx)));
-  });
+  for (let m = mask; m !== 0;) {
+    const key = lowestCardKey(m);
+    result.push((ALL_CARDS as readonly [Card, ...Card[]])[cardIndex(key) as 0]); // cardIndex(key) is 0–51 for a valid mask
+    m -= key; // key is a set bit of m, so subtraction is exact
+  }
   return result;
 }
 
@@ -814,9 +812,11 @@ export function extractCards(mask: CardMask): Card[] {
  */
 export function extractCardsKey(mask: CardMask): CardMask[] {
   const result: CardMask[] = [];
-  forEachCardIndex(mask, (idx) => {
-    result.push(cardKey(idx));
-  });
+  for (let m = mask; m !== 0;) {
+    const key = lowestCardKey(m);
+    result.push(key);
+    m -= key; // key is a set bit of m, so subtraction is exact
+  }
   return result;
 }
 
