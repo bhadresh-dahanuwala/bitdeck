@@ -261,6 +261,6 @@ Branch `task/10-release`. Write the workflow; **do not run it, tag, or publish.*
 
 ## Owner checklist (not for Gemini)
 
-- [ ] After task 02 merges: architect adds `check` as a required status check on `main`.
-- [ ] Before task 10: create the npm account (architect will guide).
+- [x] After task 02 merges: architect adds `check` and `test (20|22|24)` as required status checks on `main`.
+- [x] Before task 10: create the npm account (`bdnoads`, 2FA on for auth and writes).
 - [ ] First publish of `0.1.0` + trusted-publisher setup on npmjs.com (architect will guide).
