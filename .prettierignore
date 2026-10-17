@@ -1,0 +1,8 @@
+dist/
+coverage/
+node_modules/
+package-lock.json
+TODO.md
+GEMINI.md
+.github/pull_request_template.md
+README.md

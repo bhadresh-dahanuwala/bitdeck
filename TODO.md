@@ -22,7 +22,7 @@ Python reference: `../../python/cardspy/`.
 
 ## Tasks
 
-### - [ ] 01 — Project scaffold
+### - [x] 01 — Project scaffold
 
 Branch `task/01-scaffold`. Create the tooling only; no library code yet.
 
