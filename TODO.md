@@ -114,7 +114,7 @@ Re-export everything from `src/index.ts`.
 
 ---
 
-### - [ ] 04 — `Rank` and `Suit` (`src/rank.ts`, `src/suit.ts`)
+### - [x] 04 — `Rank` and `Suit` (`src/rank.ts`, `src/suit.ts`)
 
 Branch `task/04-rank-suit`. Port `rank.py` and `suit.py`.
 
