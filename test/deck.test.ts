@@ -240,6 +240,21 @@ describe("Deck — A7 fixes, determinism, fairness, ordering, and error paths", 
     }
   });
 
+  it("shuffle() is fair: the first card after shuffle() is uniform", () => {
+    const counts = new Uint32Array(52);
+    const deck = new Deck({ rng: mulberry32(3) });
+    for (let i = 0; i < 52000; i++) {
+      deck.reset();
+      deck.shuffle();
+      const idx = cardIndex(deck.dealCards(1, false));
+      counts[idx] = (counts[idx] ?? 0) + 1;
+    }
+    for (const c of counts) {
+      expect(c).toBeGreaterThanOrEqual(800);
+      expect(c).toBeLessThanOrEqual(1200);
+    }
+  });
+
   it("dealCards(n, true) calls rng exactly n times", () => {
     let calls = 0;
     const baseRng = mulberry32(123);
