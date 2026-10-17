@@ -87,6 +87,7 @@ export {
   rankMaskFromCards,
   sortCards,
 } from "./card";
+export { Deck, type DeckOptions } from "./deck";
 export { mulberry32, type Rng } from "./random";
 export {
   ALL_RANKS,

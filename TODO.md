@@ -159,7 +159,7 @@ Branch `task/05-card`. Port `card.py`.
 
 ---
 
-### - [ ] 06 — `Deck` (`src/deck.ts`)
+### - [x] 06 — `Deck` (`src/deck.ts`)
 
 Branch `task/06-deck`. Port `deck.py`, with the fixes from A7.
 
