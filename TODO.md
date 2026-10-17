@@ -78,7 +78,7 @@ Branch `task/02-ci`.
 
 ---
 
-### - [ ] 03 — Bit primitives (`src/bits.ts`, `src/random.ts`)
+### - [x] 03 — Bit primitives (`src/bits.ts`, `src/random.ts`)
 
 Branch `task/03-bits`. The most important task: everything else builds on it.
 
