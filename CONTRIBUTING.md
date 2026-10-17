@@ -36,3 +36,12 @@ npm run check
 - `npm test` — Run the unit test suite once.
 - `npm run test:watch` — Run Vitest in watch mode.
 - `npm run bench` — Build `dist/` and run the Vitest benchmark suite in `bench/`.
+
+## Release Process
+
+Releases are published via GitHub Actions using npm OIDC trusted publishing (no long-lived `NPM_TOKEN` secret):
+
+1. **Bump version and changelog via PR**: Open a pull request that updates `"version"` in `package.json` (and `package-lock.json` via `npm install --package-lock-only`) and updates `CHANGELOG.md` for the new version.
+2. **Merge the PR**: Ensure CI passes and merge the version-bump pull request into `main`.
+3. **Push the version tag**: From the merged `main` commit, the repository owner tags the release (`v<version>`, e.g., `git tag v0.1.0 && git push origin v0.1.0`).
+4. **Approve the `npm` environment**: Pushing a `v*` tag triggers `.github/workflows/release.yml`, which waits for owner approval on the `npm` GitHub environment. Once approved, the `publish` job upgrades `npm` (`npm install -g npm@latest`), runs `npm ci` and `npm run check`, verifies that the tag version matches `package.json`, runs `npm publish --access public` with automatic OIDC provenance, and creates the GitHub Release (`gh release create "$TAG" --generate-notes --verify-tag`).
