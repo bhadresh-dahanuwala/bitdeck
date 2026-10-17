@@ -231,7 +231,7 @@ Branch `task/08-bench`. Vitest bench files in `bench/` (excluded from coverage a
 
 ---
 
-### - [ ] 09 — Documentation
+### - [x] 09 — Documentation
 
 Branch `task/09-docs`.
 - `README.md`: badges (npm version, CI, license), what it is, install, TypeScript quick start, detailed examples
