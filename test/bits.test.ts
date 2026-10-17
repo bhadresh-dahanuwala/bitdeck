@@ -29,6 +29,7 @@ const BIT_31 = 2 ** 31;
 const BIT_32 = 2 ** 32;
 const BIT_51 = 2 ** 51;
 const BOTH_SIDES = BIT_0 + BIT_31 + BIT_32 + BIT_51;
+const ALL_INDICES = Array.from({ length: 52 }, (_, i) => i);
 
 function bigintPopcount(b: bigint): number {
   let count = 0;
@@ -64,6 +65,39 @@ function slowRankMask(m: CardMask): number {
     }
   }
   return rmask;
+}
+
+function checkMaskSingle(a: CardMask): void {
+  const ba = BigInt(a);
+  expect(isValidMask(a)).toBe(true);
+  expect(isSingleCard(a)).toBe(ba !== 0n && (ba & (ba - 1n)) === 0n);
+  expect(popcount(a)).toBe(bigintPopcount(ba));
+  expect(cardIndex(a)).toBe(bigintCardIndex(ba));
+  expect(BigInt(lowestCardKey(a))).toBe(ba & -ba);
+  expect(rankMask(a)).toBe(slowRankMask(a));
+
+  const indices: number[] = [];
+  forEachCardIndex(a, (idx) => {
+    indices.push(idx);
+  });
+  const expected = ALL_INDICES.filter((idx) => ((ba >> BigInt(idx)) & 1n) === 1n);
+  expect(indices).toEqual(expected);
+}
+
+function checkMaskPair(a: CardMask, b: CardMask): void {
+  const ba = BigInt(a);
+  const bb = BigInt(b);
+
+  expect(BigInt(maskAnd(a, b))).toBe(ba & bb);
+  expect(BigInt(maskOr(a, b))).toBe(ba | bb);
+  expect(BigInt(maskXor(a, b))).toBe(ba ^ bb);
+  expect(BigInt(maskAndNot(a, b))).toBe(ba & ~bb);
+
+  expect(maskContains(a, b)).toBe((ba & bb) === bb);
+  const sub = maskAnd(a, b);
+  expect(maskContains(a, sub)).toBe(true);
+
+  expect(maskIntersects(a, b)).toBe((ba & bb) !== 0n);
 }
 
 describe("constants", () => {
@@ -187,9 +221,7 @@ describe("edge cases around bit 31 and bit 32", () => {
 
     const allVisited: number[] = [];
     forEachCardIndex(FULL_DECK_MASK, (i) => allVisited.push(i));
-    expect(allVisited).toHaveLength(52);
-    expect(allVisited[0]).toBe(0);
-    expect(allVisited[51]).toBe(51);
+    expect(allVisited).toEqual(ALL_INDICES);
   });
 
   it("computes rankMask accurately at boundaries", () => {
@@ -204,8 +236,8 @@ describe("edge cases around bit 31 and bit 32", () => {
   });
 });
 
-describe("10,000 random 52-bit masks cross-checked against bigint & slow references", () => {
-  it("matches bigint reference for all operations across 10,000 random masks", () => {
+describe("random 52-bit masks cross-checked against bigint & slow references", () => {
+  it("matches bigint reference across 10,000 dense masks", () => {
     const rng = mulberry32(42);
     const masks: CardMask[] = [];
     for (let i = 0; i < 10000; i++) {
@@ -217,37 +249,39 @@ describe("10,000 random 52-bit masks cross-checked against bigint & slow referen
     for (let i = 0; i < 10000; i++) {
       const a = masks[i] ?? 0;
       const b = masks[(i + 1) % 10000] ?? 0;
-      const ba = BigInt(a);
-      const bb = BigInt(b);
+      checkMaskSingle(a);
+      checkMaskPair(a, b);
+    }
+  });
 
-      expect(isValidMask(a)).toBe(true);
-      expect(isSingleCard(a)).toBe(ba !== 0n && (ba & (ba - 1n)) === 0n);
+  it("matches bigint reference across 10,000 sparse (1–9 cards) and 10,000 high-bits-only masks", () => {
+    const rng = mulberry32(42);
+    const sparseMasks: CardMask[] = [];
+    const hiOnlyMasks: CardMask[] = [];
 
-      expect(BigInt(maskAnd(a, b))).toBe(ba & bb);
-      expect(BigInt(maskOr(a, b))).toBe(ba | bb);
-      expect(BigInt(maskXor(a, b))).toBe(ba ^ bb);
-      expect(BigInt(maskAndNot(a, b))).toBe(ba & ~bb);
-
-      expect(maskContains(a, b)).toBe((ba & bb) === bb);
-      const sub = maskAnd(a, b);
-      expect(maskContains(a, sub)).toBe(true);
-
-      expect(maskIntersects(a, b)).toBe((ba & bb) !== 0n);
-      expect(popcount(a)).toBe(bigintPopcount(ba));
-      expect(cardIndex(a)).toBe(bigintCardIndex(ba));
-      expect(BigInt(lowestCardKey(a))).toBe(ba & -ba);
-      expect(rankMask(a)).toBe(slowRankMask(a));
-
-      if (i < 500) {
-        const indices: number[] = [];
-        let reconstructed = 0n;
-        forEachCardIndex(a, (idx) => {
-          indices.push(idx);
-          reconstructed |= 1n << BigInt(idx);
-        });
-        expect(reconstructed).toBe(ba);
-        expect(indices).toHaveLength(popcount(a));
+    for (let i = 0; i < 10000; i++) {
+      const sparseCount = 1 + Math.floor(rng() * 9);
+      let sMask = 0;
+      for (let k = 0; k < sparseCount; k++) {
+        sMask = maskOr(sMask, cardKey(Math.floor(rng() * 52)));
       }
+      sparseMasks.push(sMask);
+
+      const hiCount = 1 + Math.floor(rng() * 9);
+      let hMask = 0;
+      for (let k = 0; k < hiCount; k++) {
+        hMask = maskOr(hMask, cardKey(32 + Math.floor(rng() * 20)));
+      }
+      hiOnlyMasks.push(hMask);
+    }
+
+    for (let i = 0; i < 10000; i++) {
+      const s = sparseMasks[i] ?? 0;
+      const h = hiOnlyMasks[i] ?? 0;
+      checkMaskSingle(s);
+      checkMaskSingle(h);
+      checkMaskPair(s, h);
+      checkMaskPair(h, s);
     }
   });
 });

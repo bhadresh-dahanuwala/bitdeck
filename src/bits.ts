@@ -251,12 +251,14 @@ export function cardIndex(key: CardMask): number {
 }
 
 /**
- * Returns the single-card bitmask (`2 ** index`) for a card index `0`–`51` via a precomputed table.
+ * Returns the single-card bitmask (`2 ** index`) for a card index `0`–`51` via a precomputed table,
+ * or `0` for indices outside `0`–`51`.
  *
  * @example
  * ```ts
  * cardKey(0); // 1
  * cardKey(51); // 2251799813685248 (2 ** 51)
+ * cardKey(52); // 0
  * ```
  */
 export function cardKey(index: number): CardMask {
